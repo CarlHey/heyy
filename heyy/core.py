@@ -29,7 +29,10 @@ def reflect(obj, skip_callable=False):
     for attr in dir(obj):
         if attr.startswith('__'):
             continue
-        value = getattr(obj, attr)
+        try:
+            value = getattr(obj, attr)
+        except Exception as e:
+            value = str(e)
         if skip_callable and callable(value):
             continue
         print(attr, value)
