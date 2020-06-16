@@ -1,7 +1,7 @@
 from functools import wraps
 from os import chdir, getcwd
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 def with_folder(folder, create_if_not_exists=True):
@@ -40,7 +40,11 @@ def reflect(obj, skip_callable=False):
 
 class DictObj:
 
-    def __init__(self, data: dict):
+    __invalid_attrs = set(filter(lambda x: not x.startswith('__'), dir(dict)))
+
+    def __init__(self, data: Optional[dict] = None):
+        if data is None:
+            data = {}
         self.__dict__.update(data)
 
     def __str__(self):
@@ -52,8 +56,14 @@ class DictObj:
     def __len__(self):
         return self.__dict__.__len__()
 
-    def __getitem__(self, item):
-        return self.__dict__.__getitem__(item)
+    def __getitem__(self, key):
+        return self.__dict__.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        return self.__dict__.__setitem__(key, value)
+
+    def __delitem__(self, key):
+        return self.__dict__.__delitem__(key)
 
     def __contains__(self, item):
         return self.__dict__.__contains__(item)
@@ -61,8 +71,17 @@ class DictObj:
     def __iter__(self):
         return iter(self.__dict__)
 
-    def items(self):
-        return self.__dict__.items()
+    def __getattr__(self, name):
+        try:
+            return getattr(self.__dict__, name)
+        except AttributeError:
+            pass
+        return self.__getattribute__(name)
+
+    def __setattr__(self, name, value):
+        if name in self.__invalid_attrs:
+            raise ValueError(f'Invalid attr name <{name}>')
+        return super().__setattr__(name, value)
 
 
 def json2obj(data: Any):
