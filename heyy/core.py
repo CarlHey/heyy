@@ -32,7 +32,7 @@ def reflect(obj, skip_callable=False):
         try:
             value = getattr(obj, attr)
         except Exception as e:
-            value = str(e)
+            value = f'[Error: <{repr(e)}>]'
         if skip_callable and callable(value):
             continue
         print(attr, value)
@@ -40,7 +40,7 @@ def reflect(obj, skip_callable=False):
 
 class DictObj:
 
-    __invalid_attrs = set(filter(lambda x: not x.startswith('__'), dir(dict)))
+    __invalid_attrs = frozenset(filter(lambda x: not x.startswith('__'), dir(dict)))
 
     def __init__(self, data: Optional[dict] = None):
         if data is None:
