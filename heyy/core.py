@@ -1,7 +1,7 @@
 from functools import wraps
 from os import chdir, getcwd
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Iterable
 
 
 def with_folder(folder, create_if_not_exists=True):
@@ -25,8 +25,14 @@ def with_folder(folder, create_if_not_exists=True):
     return decorator
 
 
-def reflect(obj, skip_callable=False):
+AttrNames = Iterable[str]
+
+
+def reflect(obj, *, skip_callable=False, exclude: Optional[AttrNames] = None):
+    exclude_attrs = set(exclude) if exclude is not None else set()
     for attr in dir(obj):
+        if attr in exclude_attrs:
+            continue
         if attr.startswith('__'):
             continue
         try:
