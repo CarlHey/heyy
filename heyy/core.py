@@ -3,6 +3,10 @@ from os import chdir, getcwd
 from pathlib import Path
 from typing import Any, Optional, Iterable
 
+from .pathtool import PathTool
+
+pathtool = PathTool()
+
 
 def with_folder(folder, create_if_not_exists=True):
     def decorator(func):
