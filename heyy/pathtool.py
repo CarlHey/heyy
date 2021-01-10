@@ -5,14 +5,25 @@ def cwd():
     print(os.getcwd())
 
 
+def listdir():
+    return sorted(os.listdir(), key=lambda i: (not os.path.isdir(i), i))
+
+
 def ls():
     cwd()
-    for i, v in enumerate(os.listdir()):
+    contents = listdir()
+    size = len(contents)
+    hint = f'是否显示全部{size}项内容？(y)'
+    if size > 100 and input(hint).lower() != 'y':
+        return
+    for i, v in enumerate(contents):
+        v = v if not os.path.isdir(v) else "(D) " + v
         print(f'[{i}]:\t{v}')
 
 
 def cd(i: int):
-    os.chdir(os.listdir()[i])
+    contents = listdir()
+    os.chdir(contents[i])
     ls()
 
 
