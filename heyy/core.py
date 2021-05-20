@@ -106,7 +106,6 @@ class DictObj:
         return super().__setattr__(name, value)
 
 
-# 2021年5月19日12:40±
 class DictObj2(dict, MutableMapping[_KT, _VT]):
 
     def __init__(self, *args, **kw) -> None:
@@ -157,7 +156,6 @@ def _lowered_if_str(o: _T) -> _T:
     return o
 
 
-# 2021年5月19日13:08:18
 class CaseInsensitiveDictObj2(DictObj2[_KT, _VT]):
 
     def __init__(self, *args, **kw) -> None:
@@ -233,7 +231,7 @@ class CaseInsensitiveDictObj2(DictObj2[_KT, _VT]):
         super().__delattr__(name.lower())
 
 
-def json2obj(data: Any, *, ignore_case=False):
+def json2obj(data: Any = _null, *, ignore_case=False):
     dict_obj_class = DictObj if not ignore_case else CaseInsensitiveDictObj
     if isinstance(data, dict):
         data = data.copy()
@@ -247,6 +245,8 @@ def json2obj(data: Any, *, ignore_case=False):
         return data
     elif isinstance(data, tuple):
         return json2obj(list(data), ignore_case=ignore_case)
+    elif data is _null:
+        return dict_obj_class()
     else:
         return data
 
@@ -291,7 +291,6 @@ class CaseInsensitiveDictObj(DictObj):
         super().__delattr__(name.lower())
 
 
-# 2021年3月25日01:14:44
 def select(obj: DictObj, attrs: Iterable[str]):
     return obj.__class__({k: v for k, v in obj.items() if k in attrs})
 
