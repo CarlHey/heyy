@@ -181,9 +181,22 @@ def json2obj(data: Any = _null, *, ignore_case=False):
         return data
 
 
-def select(obj: DictObj, attrs: Iterable[str]):
-    return obj.__class__({k: v for k, v in obj.items() if k in attrs})
+def select(obj: DictObj, attrs: Iterable[str], *, ignore_error=True):
+    o = obj.__class__()
+    for a in attrs:
+        try:
+            o[a] = obj[a]
+        except KeyError:
+            if ignore_error:
+                continue
+            raise
+    return o
 
 
 def omit(obj: DictObj, attrs: Iterable[str]):
-    return obj.__class__({k: v for k, v in obj.items() if k not in attrs})
+    o = obj.copy()
+    keys = obj.keys()
+    for a in attrs:
+        if a in keys:
+            del o[a]
+    return o
