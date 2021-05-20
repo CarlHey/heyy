@@ -1,6 +1,8 @@
 from .__version__ import __version__
 from .core import *
 
+pt = pathtool
+
 __all__ = [
     'with_folder',
     'reflect',
@@ -8,4 +10,5 @@ __all__ = [
     'DictObj',
     'CaseInsensitiveDictObj',
     'pathtool',
+    'pt',
 ]
