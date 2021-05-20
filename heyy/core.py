@@ -1,21 +1,13 @@
 from functools import wraps
 from os import chdir, getcwd
 from pathlib import Path
-from typing import Any, Optional, Iterable, MutableMapping, TypeVar, Mapping
+from typing import Any, Optional, Iterable, MutableMapping, Mapping
 
 from .pathtool import PathTool
+from .types import _T, _S, _KT, _VT, AttrNames
+from .utils import _lowered_if_str, _lower_str_iterable_wrap
 
 pathtool = PathTool()
-
-_T = TypeVar("_T")
-_S = TypeVar("_S")
-_KT = TypeVar("_KT")  # Key type.
-_VT = TypeVar("_VT")  # Value type.
-_T_co = TypeVar("_T_co", covariant=True)  # Any type covariant containers.
-_V_co = TypeVar("_V_co", covariant=True)  # Any type covariant containers.
-_KT_co = TypeVar("_KT_co", covariant=True)  # Key type covariant containers.
-_VT_co = TypeVar("_VT_co", covariant=True)  # Value type covariant containers.
-_T_contra = TypeVar("_T_contra", contravariant=True)  # Ditto contravariant.
 
 _null = object()
 
@@ -39,9 +31,6 @@ def with_folder(folder, create_if_not_exists=True):
             return res
         return wrapper
     return decorator
-
-
-AttrNames = Iterable[str]
 
 
 def reflect(obj, *, skip_callable=False, exclude: Optional[AttrNames] = None):
@@ -141,19 +130,6 @@ class DictObj2(dict, MutableMapping[_KT, _VT]):
 
     def copy(self) -> 'DictObj2[_KT, _VT]':
         return self.__class__(super().copy())
-
-
-def _lower_str_iterable_wrap(iterable: Iterable[_T]) -> Iterable[_T]:
-    for i in iterable:
-        if isinstance(i, str):
-            i = i.lower()
-        yield i
-
-
-def _lowered_if_str(o: _T) -> _T:
-    if isinstance(o, str):
-        o = o.lower()
-    return o
 
 
 class CaseInsensitiveDictObj2(DictObj2[_KT, _VT]):
