@@ -195,8 +195,7 @@ def select(obj: DictObj, attrs: Iterable[str], *, ignore_error=True):
 
 def omit(obj: DictObj, attrs: Iterable[str]):
     o = obj.copy()
-    keys = obj.keys()
     for a in attrs:
-        if a in keys:
+        if a in obj:
             del o[a]
     return o
