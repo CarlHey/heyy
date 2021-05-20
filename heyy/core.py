@@ -49,59 +49,13 @@ def reflect(obj, *, skip_callable=False, exclude: Optional[AttrNames] = None):
         print(attr, value)
 
 
-class DictObj:
-
-    __reserved_attrs = frozenset(filter(lambda x: not x.startswith('__'), dir(dict)))
-
-    def __init__(self, data: Optional[dict] = None):
-        if data is None:
-            data = {}
-        self.__dict__.update(data)
-
-    def __str__(self):
-        return self.__dict__.__str__()
-
-    def __repr__(self):
-        return self.__dict__.__repr__()
-
-    def __len__(self):
-        return self.__dict__.__len__()
-
-    def __getitem__(self, key):
-        return self.__dict__.__getitem__(key)
-
-    def __setitem__(self, key, value):
-        return self.__dict__.__setitem__(key, value)
-
-    def __delitem__(self, key):
-        return self.__dict__.__delitem__(key)
-
-    def __contains__(self, item):
-        return self.__dict__.__contains__(item)
-
-    def __iter__(self):
-        return iter(self.__dict__)
-
-    def __getattr__(self, name: str):
-        try:
-            return getattr(self.__dict__, name)
-        except AttributeError:
-            pass
-        return self.__getattribute__(name)
-
-    def __setattr__(self, name: str, value):
-        if name in self.__reserved_attrs:
-            raise ValueError(f'Invalid attr name <{name}>')
-        return super().__setattr__(name, value)
-
-
-class DictObj2(dict, MutableMapping[_KT, _VT]):
+class DictObj(dict, MutableMapping[_KT, _VT]):
 
     def __init__(self, *args, **kw) -> None:
         super().__init__(*args, **kw)
 
     @classmethod
-    def fromkeys(cls, iterable: Iterable[_T], value: _S = _null) -> 'DictObj2[_T, _S]':
+    def fromkeys(cls, iterable: Iterable[_T], value: _S = _null) -> 'DictObj[_T, _S]':
         if value is _null:
             result = super().fromkeys(iterable)
         else:
@@ -128,11 +82,11 @@ class DictObj2(dict, MutableMapping[_KT, _VT]):
                 return
             raise
 
-    def copy(self) -> 'DictObj2[_KT, _VT]':
+    def copy(self) -> 'DictObj[_KT, _VT]':
         return self.__class__(super().copy())
 
 
-class CaseInsensitiveDictObj2(DictObj2[_KT, _VT]):
+class CaseInsensitiveDictObj(DictObj[_KT, _VT]):
 
     def __init__(self, *args, **kw) -> None:
         super().__init__()
@@ -156,7 +110,7 @@ class CaseInsensitiveDictObj2(DictObj2[_KT, _VT]):
             self[key.lower()] = value
 
     @classmethod
-    def fromkeys(cls, iterable: Iterable[_T], value: _S = _null) -> 'CaseInsensitiveDictObj2[_T, _S]':
+    def fromkeys(cls, iterable: Iterable[_T], value: _S = _null) -> 'CaseInsensitiveDictObj[_T, _S]':
         if value is _null:
             result = super().fromkeys(_lower_str_iterable_wrap(iterable))
         else:
@@ -225,46 +179,6 @@ def json2obj(data: Any = _null, *, ignore_case=False):
         return dict_obj_class()
     else:
         return data
-
-
-class CaseInsensitiveDictObj(DictObj):
-
-    def __init__(self, data: Optional[dict] = None):
-        if isinstance(data, dict):
-            data = {
-                (k.lower() if isinstance(k, str) else k): v
-                for k, v in data.items()
-            }
-        super().__init__(data)
-
-    def __getitem__(self, key):
-        if isinstance(key, str):
-            key = key.lower()
-        return super().__getitem__(key)
-
-    def __setitem__(self, key, value):
-        if isinstance(key, str):
-            key = key.lower()
-        super().__setitem__(key, value)
-
-    def __delitem__(self, key):
-        if isinstance(key, str):
-            key = key.lower()
-        super().__delitem__(key)
-
-    def __contains__(self, item):
-        if isinstance(item, str):
-            item = item.lower()
-        return super().__contains__(item)
-
-    def __getattr__(self, name: str):
-        return super().__getattr__(name.lower())
-
-    def __setattr__(self, name: str, value):
-        super().__setattr__(name.lower(), value)
-
-    def __delattr__(self, name: str) -> None:
-        super().__delattr__(name.lower())
 
 
 def select(obj: DictObj, attrs: Iterable[str]):
