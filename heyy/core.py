@@ -3,11 +3,9 @@ from os import chdir, getcwd
 from pathlib import Path
 from typing import Any, Optional, Iterable, MutableMapping, Mapping
 
-from .pathtool import PathTool
 from .types import _T, _S, _KT, _VT, AttrNames
-from .utils import _lowered_if_str, _lower_str_iterable_wrap
+from .utils import wraps_doc, _lowered_if_str, _lower_str_iterable_wrap
 
-pathtool = PathTool()
 
 _null = object()
 
@@ -49,12 +47,22 @@ def reflect(obj, *, skip_callable=False, exclude: Optional[AttrNames] = None):
         print(attr, value)
 
 
+class DictObjHelper:
+
+    def __getattr__(self, item):
+        def wrapper(obj, *args, **kw):
+            return getattr(obj.__class__, item)(obj, *args, **kw)
+        return wrapper
+
+
 class DictObj(dict, MutableMapping[_KT, _VT]):
 
     def __init__(self, *args, **kw) -> None:
         super().__init__(*args, **kw)
+        self.__dict__ = self
 
     @classmethod
+    @wraps_doc(dict.fromkeys)
     def fromkeys(cls, iterable: Iterable[_T], value: _S = _null) -> 'DictObj[_T, _S]':
         if value is _null:
             result = super().fromkeys(iterable)
@@ -62,28 +70,27 @@ class DictObj(dict, MutableMapping[_KT, _VT]):
             result = super().fromkeys(iterable, value)
         return cls(result)
 
-    def __setattr__(self, name: str, value):
-        self[name] = value
-
-    def __getattr__(self, name: str) -> _VT:
-        try:
-            return super().__getattribute__(name)
-        except AttributeError:
-            if name in self:
-                return self[name]
-            raise
-
-    def __delattr__(self, name: str):
-        try:
-            return super().__delattr__(name)
-        except AttributeError:
-            if name in self:
-                del self[name]
-                return
-            raise
-
+    @wraps_doc(dict.copy)
     def copy(self) -> 'DictObj[_KT, _VT]':
         return self.__class__(super().copy())
+
+    def select(self, attrs: Iterable[str], *, ignore_error=True):
+        o = self.__class__()
+        for attr in attrs:
+            try:
+                o[attr] = self[attr]
+            except KeyError:
+                if ignore_error:
+                    continue
+                raise
+        return o
+
+    def omit(self, attrs: Iterable[str]):
+        o = self.copy()
+        for attr in attrs:
+            if attr in self:
+                del o[attr]
+        return o
 
 
 class CaseInsensitiveDictObj(DictObj[_KT, _VT]):
@@ -92,6 +99,7 @@ class CaseInsensitiveDictObj(DictObj[_KT, _VT]):
         super().__init__()
         self.update(*args, **kw)
 
+    @wraps_doc(dict.update)
     def update(self, *args, **kwargs) -> None:
         if len(args) > 1:
             raise TypeError('update expected at most 1 arguments, got %d' % len(args))
@@ -110,6 +118,7 @@ class CaseInsensitiveDictObj(DictObj[_KT, _VT]):
             self[key.lower()] = value
 
     @classmethod
+    @wraps_doc(dict.fromkeys)
     def fromkeys(cls, iterable: Iterable[_T], value: _S = _null) -> 'CaseInsensitiveDictObj[_T, _S]':
         if value is _null:
             result = super().fromkeys(_lower_str_iterable_wrap(iterable))
@@ -117,10 +126,12 @@ class CaseInsensitiveDictObj(DictObj[_KT, _VT]):
             result = super().fromkeys(_lower_str_iterable_wrap(iterable), value)
         return cls(result)
 
+    @wraps_doc(dict.setdefault)
     def setdefault(self, key, default=None) -> _VT:
         key = _lowered_if_str(key)
         return super().setdefault(key, default)
 
+    @wraps_doc(dict.pop)
     def pop(self, key, default=_null):
         key = _lowered_if_str(key)
         if default is _null:
@@ -128,6 +139,7 @@ class CaseInsensitiveDictObj(DictObj[_KT, _VT]):
         else:
             return super().pop(key, default)
 
+    @wraps_doc(dict.get)
     def get(self, key, default=_null):
         key = _lowered_if_str(key)
         if default is _null:
@@ -151,11 +163,11 @@ class CaseInsensitiveDictObj(DictObj[_KT, _VT]):
         o = _lowered_if_str(o)
         return super().__contains__(o)
 
+    def __getattribute__(self, name: str) -> Any:
+        return super().__getattribute__(name.lower())
+
     def __setattr__(self, name: str, value):
         super().__setattr__(name.lower(), value)
-
-    def __getattr__(self, name: str):
-        return super().__getattr__(name.lower())
 
     def __delattr__(self, name: str):
         super().__delattr__(name.lower())
@@ -179,23 +191,3 @@ def json2obj(data: Any = _null, *, ignore_case=False):
         return dict_obj_class()
     else:
         return data
-
-
-def select(obj: DictObj, attrs: Iterable[str], *, ignore_error=True):
-    o = obj.__class__()
-    for a in attrs:
-        try:
-            o[a] = obj[a]
-        except KeyError:
-            if ignore_error:
-                continue
-            raise
-    return o
-
-
-def omit(obj: DictObj, attrs: Iterable[str]):
-    o = obj.copy()
-    for a in attrs:
-        if a in obj:
-            del o[a]
-    return o

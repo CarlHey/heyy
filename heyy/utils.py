@@ -1,6 +1,9 @@
+from functools import wraps as _wraps, partial
 from typing import Iterable
 
 from .types import _T
+
+wraps_doc = partial(_wraps, assigned=('__doc__',))
 
 
 def _lower_str_iterable_wrap(iterable: Iterable[_T]) -> Iterable[_T]:

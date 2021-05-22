@@ -1,7 +1,9 @@
 from .__version__ import __version__
 from .core import *
+from .pathtool import PathTool
 
-pt = pathtool
+pt = PathTool()
+do = DictObjHelper()
 
 __all__ = [
     'with_folder',
@@ -9,6 +11,6 @@ __all__ = [
     'json2obj',
     'DictObj',
     'CaseInsensitiveDictObj',
-    'pathtool',
     'pt',
+    'do',
 ]
