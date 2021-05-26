@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Any, Optional, Iterable, MutableMapping, Mapping
 
 from .types import _T, _S, _KT, _VT, AttrNames
-from .utils import wraps_doc, _lowered_if_str, _lower_str_iterable_wrap
+from .utils import Null,  wraps_doc, _lowered_if_str, _lower_str_iterable_wrap
 
 
-_null = object()
+_null = Null()
 
 
 def with_folder(folder, create_if_not_exists=True):
