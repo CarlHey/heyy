@@ -51,7 +51,15 @@ class DictObjHelper:
 
     def __getattr__(self, item):
         def wrapper(obj, *args, **kw):
-            return getattr(obj.__class__, item)(obj, *args, **kw)
+            from inspect import getattr_static
+            from types import FunctionType
+            attr = getattr_static(type(obj), item)
+            if hasattr(attr, '__get__'):
+                v = attr.__get__(obj, type(obj))
+                if isinstance(attr, (classmethod, staticmethod, FunctionType)):
+                    return v(*args, **kw)
+                return v
+            return attr
         return wrapper
 
 
