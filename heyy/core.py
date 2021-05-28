@@ -31,12 +31,12 @@ def with_folder(folder, create_if_not_exists=True):
     return decorator
 
 
-def reflect(obj, *, skip_callable=False, exclude: Optional[AttrNames] = None):
+def reflect(obj, *, skip_callable=False, skip_magic=True, exclude: Optional[AttrNames] = None):
     exclude_attrs = set(exclude) if exclude is not None else set()
     for attr in dir(obj):
         if attr in exclude_attrs:
             continue
-        if attr.startswith('__'):
+        if skip_magic and attr.startswith('__'):
             continue
         try:
             value = getattr(obj, attr)
@@ -72,10 +72,10 @@ class DictObj(dict, MutableMapping[_KT, _VT]):
 
     @wraps_doc(dict.copy)
     def copy(self) -> 'DictObj[_KT, _VT]':
-        return self.__class__(super().copy())
+        return type(self)(super().copy())
 
     def select(self, attrs: Iterable[str], *, ignore_error=True):
-        o = self.__class__()
+        o = type(self)()
         for attr in attrs:
             try:
                 o[attr] = self[attr]
